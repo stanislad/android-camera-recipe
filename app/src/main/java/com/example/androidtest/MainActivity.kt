@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.ArrayAdapter
+import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -65,9 +67,7 @@ class MainActivity : AppCompatActivity() {
             imageView.setImageBitmap(rotatedBitmap)
             val image_text = ProcessImage().doOCR(applicationContext,rotatedBitmap)
             val rightGuesses = ProcessImage().processImageText(image_text)
-
-            val textView : TextView = findViewById<TextView>(R.id.textView)
-            textView.text = rightGuesses.joinToString()
+            displayText(rightGuesses)
 
             val params = rightGuesses.joinToString(",+")
 
@@ -77,7 +77,21 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun displayText(rightGuesses: ArrayList<String>)
+    {
+        //todo: old print to textView
+        //val textView : TextView = findViewById<TextView>(R.id.textView)
+        //textView.text = rightGuesses.joinToString()
 
+        // use arrayadapter and define an array
+        val arrayAdapter: ArrayAdapter<*>
+
+        // access the listView from xml file
+        var mListView = findViewById<ListView>(R.id.list_view)
+        arrayAdapter = ArrayAdapter(this,
+                android.R.layout.simple_list_item_1, rightGuesses)
+        mListView.adapter = arrayAdapter
+    }
 
     fun run(url: String) {
         val request = Request.Builder()
@@ -86,8 +100,21 @@ class MainActivity : AppCompatActivity() {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {}
-            override fun onResponse(call: Call, response: Response) = println(response.body()?.string())
+            override fun onResponse(call: Call, response: Response) = responseCallback(response)
         })
+    }
+
+    fun responseCallback(response: Response)
+    {
+        val data = response.body()?.string()
+        println(data)
+
+//        if (data != null) {
+//            for(i in data){
+//                println(i)
+//            }
+//        }
+
     }
 
     fun Bitmap.rotate(degrees: Float): Bitmap
