@@ -8,11 +8,9 @@ import android.graphics.Matrix
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Log
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import android.widget.TextView
-import android.widget.Toast
+import android.util.SparseBooleanArray
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
@@ -20,12 +18,13 @@ import okhttp3.*
 import java.io.File
 import java.io.IOException
 
+
 private const val FILE_NAME = "photo.jpg"
 private const val REQUEST_CODE = 42
 private lateinit var photoFile: File
 private val client = OkHttpClient()
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -47,6 +46,21 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
+
+        btnok.setOnClickListener{
+            val mListView = findViewById<ListView>(R.id.list_view)
+            val len: Int = mListView.count
+            val checked: SparseBooleanArray = mListView.checkedItemPositions
+
+            val array : ArrayList<String> = arrayListOf()
+
+            for (i in 0 until len) if (checked[i]) {
+                val item: String = mListView.getItemAtPosition(i) as String
+                array.add(item)
+            }
+            //todo check if array isnt empty
+            callApi(array)
+        }
     }
 
     private fun getPhotoFile(fileName: String): File
@@ -59,19 +73,18 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?)
     {
         if(requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK){
-//            val takenImage = data?.extras?.get("data") as Bitmap
+
             val takenImage = BitmapFactory.decodeFile(photoFile.absolutePath)
 
             val rotatedBitmap = takenImage.rotate(90f)
 
             imageView.setImageBitmap(rotatedBitmap)
-            val image_text = ProcessImage().doOCR(applicationContext,rotatedBitmap)
+            val image_text = ProcessImage().doOCR(applicationContext, rotatedBitmap)
             val rightGuesses = ProcessImage().processImageText(image_text)
+//            val rightGuesses = arrayListOf<String>("apple", "banana")
             displayText(rightGuesses)
 
-            val params = rightGuesses.joinToString(",+")
 
-            run("https://api.spoonacular.com/recipes/findByIngredients?ingredients=$params&number=5&apiKey=07639bcabe6742da912059c48ffd7010")
         }else{
             super.onActivityResult(requestCode, resultCode, data)
         }
@@ -84,13 +97,24 @@ class MainActivity : AppCompatActivity() {
         //textView.text = rightGuesses.joinToString()
 
         // use arrayadapter and define an array
-        val arrayAdapter: ArrayAdapter<*>
+        val arrayAdapter: ArrayAdapter<String>
 
         // access the listView from xml file
-        var mListView = findViewById<ListView>(R.id.list_view)
+        val mListView = findViewById<ListView>(R.id.list_view)
         arrayAdapter = ArrayAdapter(this,
-                android.R.layout.simple_list_item_1, rightGuesses)
-        mListView.adapter = arrayAdapter
+                android.R.layout.simple_list_item_multiple_choice, rightGuesses)
+        mListView?.adapter = arrayAdapter
+        mListView?.choiceMode = ListView.CHOICE_MODE_MULTIPLE
+        mListView?.onItemClickListener = this
+
+
+    }
+
+    private fun callApi(rightGuesses: ArrayList<String>)
+    {
+        val params = rightGuesses.joinToString(",+")
+        println(params)
+        run("https://api.spoonacular.com/recipes/findByIngredients?ingredients=$params&number=5&apiKey=07639bcabe6742da912059c48ffd7010")
     }
 
     fun run(url: String) {
@@ -121,6 +145,16 @@ class MainActivity : AppCompatActivity() {
     {
         val matrix = Matrix().apply { postRotate(degrees) }
         return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
+    }
+
+    override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+
+        var items:String = parent?.getItemAtPosition(position) as String
+
+
+
+//        Toast.makeText(applicationContext, items, Toast.LENGTH_LONG).show()
+
     }
 }
 
