@@ -15,6 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import kotlinx.android.synthetic.main.activity_main.*
 import okhttp3.*
+import org.json.JSONArray
+import org.json.JSONTokener
 import java.io.File
 import java.io.IOException
 
@@ -106,15 +108,13 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         mListView?.adapter = arrayAdapter
         mListView?.choiceMode = ListView.CHOICE_MODE_MULTIPLE
         mListView?.onItemClickListener = this
-
-
     }
 
     private fun callApi(rightGuesses: ArrayList<String>)
     {
         val params = rightGuesses.joinToString(",+")
         println(params)
-        run("https://api.spoonacular.com/recipes/findByIngredients?ingredients=$params&number=5&apiKey=07639bcabe6742da912059c48ffd7010")
+        run("https://api.spoonacular.com/recipes/findByIngredients?ingredients=$params&number=25&apiKey=07639bcabe6742da912059c48ffd7010")
     }
 
     fun run(url: String) {
@@ -131,18 +131,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
     fun responseCallback(response: Response)
     {
         val data = response.body()?.string()
-        println(data)
-
-        openRecipeActivity(data.toString())
-
-//        if (data != null) {
-//            for(i in data){
-//                println(i)
-//            }
-//        }
-
-
-
+        openRecipeActivity(data)
     }
 
     fun Bitmap.rotate(degrees: Float): Bitmap
@@ -151,7 +140,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
-    fun openRecipeActivity(data: String)
+    fun openRecipeActivity(data: String?)
     {
         val intent = Intent(this, RecipeActivity::class.java)
         // To pass any data to next activity
