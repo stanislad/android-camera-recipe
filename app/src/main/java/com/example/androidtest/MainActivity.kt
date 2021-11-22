@@ -133,11 +133,15 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         val data = response.body()?.string()
         println(data)
 
+        openRecipeActivity(data.toString())
+
 //        if (data != null) {
 //            for(i in data){
 //                println(i)
 //            }
 //        }
+
+
 
     }
 
@@ -147,14 +151,19 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemClickListener {
         return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
+    fun openRecipeActivity(data: String)
+    {
+        val intent = Intent(this, RecipeActivity::class.java)
+        // To pass any data to next activity
+        intent.putExtra("data", data)
+        // start your next activity
+        startActivity(intent)
+    }
+
     override fun onItemClick(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
 
         var items:String = parent?.getItemAtPosition(position) as String
-
-
-
 //        Toast.makeText(applicationContext, items, Toast.LENGTH_LONG).show()
-
     }
 }
 
